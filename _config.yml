@@ -28,12 +28,6 @@ twitter_username: srangatang
 github_username:  srang
 linkedin_username: srang
 
-header_pages:
-  - blog.html
-  - football.html
-  - about.md
-
-
 # Build settings
 theme: minima
 plugins:

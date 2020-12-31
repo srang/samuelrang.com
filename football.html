@@ -2,12 +2,9 @@
 ## FOOTBALL HOME
 layout: default
 title: Football
+navigated: true
 ---
 {% assign posts = site.categories.football %}
 
-<ul>
-  <h1>NFL Posts</h1>
-  {% for post in posts %}
-    {% include post_item.html %}
-  {% endfor %}
-</ul>
+<h1 class="post-list-heading">NFL Posts</h1>
+{% include post_item.html %}

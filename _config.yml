@@ -29,9 +29,9 @@ github_username:  srang
 linkedin_username: srang
 
 header_pages:
-  - about.md
   - blog.html
-  - football.md
+  - football.html
+  - about.md
 
 
 # Build settings

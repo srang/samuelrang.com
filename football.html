@@ -1,0 +1,13 @@
+---
+## FOOTBALL HOME
+layout: default
+title: Football
+---
+{% assign posts = site.categories.football %}
+
+<ul>
+  <h1>NFL Posts</h1>
+  {% for post in posts %}
+    {% include post_item.html %}
+  {% endfor %}
+</ul>

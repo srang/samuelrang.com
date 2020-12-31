@@ -7,17 +7,7 @@ title: Everything
 
 <ul>
   {% for post in site.posts %}
-    <li>
-      <h2>
-        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
-        {% if post.tags.size > 0 %}
-          {% for tag in post.tags %}
-            <span class="post_tags">{{ tag }}</span>
-          {% endfor %}
-        {% endif %}
-      </h2>
-      {{ post.excerpt }}
-    </li>
+    {% include post_item.html %}
   {% endfor %}
 </ul>
 

@@ -1,0 +1,11 @@
+<li>
+  <h2>
+    <a href="{{ post.url | relative_url }}" class="post_title">{{ post.title }}</a>
+    {% if post.tags.size > 0 %}
+      {% for tag in post.tags %}
+        <span class="post_tag">{{ tag }}</span>
+      {% endfor %}
+    {% endif %}
+  </h2>
+  {{ post.excerpt }}
+</li>

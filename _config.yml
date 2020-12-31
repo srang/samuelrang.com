@@ -19,19 +19,27 @@
 # in the templates via {{ site.myvariable }}.
 
 title: The Rang Blog
-author:
-  name: Sam Rang
+author: Sam Rang
 description: >- # this means to ignore newlines until "baseurl:"
-  A blog about football, beer, code, and whatever else is interesting.
+  It's a blog
 baseurl: "/samuelrang.com" # the subpath of your site, e.g. /blog
 url: "srang.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: srangatang
 github_username:  srang
+linkedin_username: srang
+
+header_pages:
+  - about.md
+  - blog.html
+  - football.md
+
 
 # Build settings
 theme: minima
 plugins:
   - jekyll-feed
+  - jekyll-seo-tag
+  - jemoji
 
 # Exclude from processing.
 # The following items will not be processed, by default.

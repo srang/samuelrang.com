@@ -1,6 +1,6 @@
 ---
 ## FOOTBALL HOME
 layout: default
-title: Football stuff
+title: Football
 ---
-This is the football homepage.
+This is the football page.

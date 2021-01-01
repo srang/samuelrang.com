@@ -2,7 +2,7 @@
 layout: post
 title: "Week 1 - Week in Review"
 author: srang
-date:   2020-09-09
+date:   2020-09-15
 categories: football
 tags:
   - football
@@ -20,5 +20,6 @@ professional football being on TV again, in no particular order:
 - The Bears have now won five straight matchups against Detroit, and the Trubisky legacy lives on!
 - Old QBs can still ball
 - Jerry Jones is jealous of the Ram’s new stadium
-- It took until Tuesday morning before I noticed that the Cardinals actually won the game against the defending NFC champs. So much for the 49er's running things back
+- It took until Tuesday morning before I noticed that the Cardinals actually won the game against
+ the defending NFC champs. So much for the 49er's running things back
 

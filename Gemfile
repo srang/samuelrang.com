@@ -17,7 +17,7 @@ gem "github-pages", "~> 209", group: :jekyll_plugins
 group :jekyll_plugins do
   gem "jekyll-feed", "~> 0.12"
   gem "jekyll-seo-tag", "~> 2.6"
-  # gem "jemoji", "~ 0.12"
+  gem "jemoji"
 end
 
 # UNCOMMENT FOR WINDOWS

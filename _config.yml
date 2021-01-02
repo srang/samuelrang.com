@@ -35,6 +35,13 @@ plugins:
   - jekyll-seo-tag
   - jemoji
 
+defaults:
+  - scope:
+      type: tags
+    values:
+      layout: tag_page
+      permalink: tags/:tag/
+
 # Exclude from processing.
 # The following items will not be processed, by default.
 # Any item listed under the `exclude:` key here will be automatically added to

@@ -7,7 +7,11 @@ categories: football
 tags:
   - football
   - game of the week
+  - cardinals
+  - bills
 ---
+
+## Game of the Week
 
 This is now the fourth week in a row that we’ve had a bird-team in the GOTW and
 the second week in a row that it’s been Kyler Murray’s bird-team. And make no

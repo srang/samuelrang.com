@@ -2,7 +2,7 @@
 layout: post
 title:  "How I made the tag links"
 author: srang
-date:   2021-01-01
+date:   2021-01-04
 categories: tech
 tags:
   - code
@@ -97,6 +97,8 @@ click the tag and see other posts with that tag. This is where things got
 surprisingly complicated (for me at least, feel free to leave feedback in the
 [repo](github.com/srang/samuelrang.com)).
 
+### Writing a Custom Plugin
+
 >*NOTE*: It's important to know that up to this point, I'd been using the
 `github-pages` gem for building and serving the site, as I use GitHub Pages to
 host the site. Using GitHub Pages to host a Jekyll site has [designed
@@ -167,17 +169,29 @@ end
 {% endraw %}
 {% endhighlight %}
 
+This plugin has two custom classes, a Generator and a Page. The
+`TagPageGenerator` iterates through all the Tags in the Site and generates a
+new `TagPage` for each, passing in the Tag and all Posts with that Tag.
+Generators are automatically run as the site is built. The `TagPage` assigns
+the array of posts and the name of the tag to named variables in the Page so
+they can be easily accessed via `page.tag_posts` and `page.tag_name`,
+respectively.
+
 >For those with a keen eye, you may notice another small tweak. I had trouble
-with the example iteration: `site.tags.each do |category, posts|` left the
-`posts` variable empty. Instead I ended up iterating over `site.keys` and then
-fetching the posts in the loop: `site.tags[tag]`.
+with the iteration from the official Jekyll example code: `site.tags.each do
+|category, posts|` left the `posts` variable empty. Instead, I ended up
+iterating over `site.keys` and fetching the posts in the loop with
+`site.tags[tag]`.
 
-The last step to using a custom plugin was figuring out how to manually deploy
-the site since I could no longer let GitHub automagically package things. There
-were lots of posts and strategies out there, but I landed on [this
-one](https://surdu.me/2020/02/04/jekyll-git-hook.html) using pre-push git hooks because
-it was simple and I understood how it worked.
+### Building and Deploying the Site
 
+To use my new custom plugin, I needed to switch to manually building and
+deploying the site, since I could no longer let GitHub automagically do that.
+There are lots of posts and strategies out there, but I landed on [this
+one](https://surdu.me/2020/02/04/jekyll-git-hook.html) using pre-push git
+hooks:
+
+`.git/hooks/pre-push`
 {% highlight bash linenos %}
 {% raw %}
 #!/bin/sh
@@ -188,45 +202,69 @@ set -e
 # Set the name of the folder that will be created in the parent
 # folder of your repo folder, and which will temporarily
 # hold the generated content.
-temp_folder="_gh-pages-temp"
+TEMP_FOLDER="_gh-pages-temp"
+MASTER_BRANCH=main
+DEPLOY_BRANCH=gh-pages
 
 # Make sure our main code runs only if we push the master branch
-if [ "$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)" == "main" ]; then
+if [ "$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)" == $MASTER_BRANCH ]; then
 	# Store the last commit message from master branch
-	last_message=$(git show -s --format=%s main)
+	last_message=$(git show -s --format=%s $MASTER_BRANCH)
 
 	# Build our Jekyll site
 	JEKYLL_ENV=production bundle exec jekyll build
 
 	# Move the generated site in our temp folder
-	mv _site ../${temp_folder}
+	mv _site ../${TEMP_FOLDER}
 
 	# Checkout the gh-pages branch and clean it's contents
-	git checkout gh-pages
+	git checkout $DEPLOY_BRANCH
 	rm -rf *
 
 	# Copy the site content from the temp folder and remove the temp folder
-	cp -r ../${temp_folder}/* .
-	rm -rf ../${temp_folder}
+	cp -r ../${TEMP_FOLDER}/* .
+	rm -rf ../${TEMP_FOLDER}
 
-	echo "Commiting to gh-pages"
+	echo "Commiting to $DEPLOY_BRANCH"
 	# Commit and push our generated site to GitHub
 	git add -A
 	git commit -m "Built \`$last_message\`"
 	git push
 
 	# Go back to the master branch
-	git checkout main
+	git checkout $MASTER_BRANCH
 else
-	echo "Not master branch. Skipping build"
+	echo "Not $MASTER_BRANCH branch. Skipping build"
 fi
 {% endraw %}
 {% endhighlight %}
 
-Finally, I needed to create a layout for each page my `ListByTagsPlugin` generates.
-In my `_config.yml` I have the page defaults as such:
+### Showing the Pages
 
+Now that I had my site up-and-running with the custom plugin, I needed to
+create a new layout for the pages the plugin generates, defined in `_layouts`
+as:
 
+`_layouts/tag_page.html`
+{% highlight html linenos %}
+{% raw %}
+---
+layout: default
+---
+{% assign posts = page.tag_posts %}
+
+<h1 class="post-list-heading">
+  <code>{{ page.tag_name }}</code> Posts
+</h1>
+{% include post_item.html %}
+{% endraw %}
+{% endhighlight %}
+
+This is almost identical to my `football.html` category page discussed earlier
+(yay reusable code). To use this layout for a generated `TagPage`, I configured
+the page defaults in my `_config.yml`, specifying the layout as `tag_page`:
+
+`_config.yml`
 {% highlight yaml linenos %}
 {% raw %}
 defaults:
@@ -238,36 +276,19 @@ defaults:
 {% endraw %}
 {% endhighlight %}
 
-This sets the layout as `tag_page` which is defined in `_layouts` as:
+At this point, the site is building and deploying and the plugin is generating new pages
+at build time using the new layout for every tag in the site. The only problem is _there's
+no way to get to the pages!_ Easy enough to fix. I tweaked the `post_item` code that we've
+been so wonderfully reusing to change the tags to links:
 
+`_includes/post_item.html`
 {% highlight html linenos %}
 {% raw %}
----
-layout: default
----
-{% assign posts = page.tag_posts %}
-
-<h1 class="post-list-heading"><code>{{ page.tag_name }}</code> Posts</h1>
-{% include post_item.html %}
-{% endraw %}
-{% endhighlight %}
-
-Which is almost identical to my `football.html` category page discussed at the
-beginning of this post. All that was left was making my tags links:
-
-
-{% highlight html linenos %}
-{% raw %}
-<h3>
-  <a class="post-link" href="{{ post.url | relative_url }}">
-    {{ post.title | escape }}
-  </a>
-  {% if post.tags.size > 0 %}
-    {% for tag in post.tags %}
-      <a href="{{ "/tags/" | append: tag | relative_url }}" class="post-tag">{{ tag }}</a>
-    {% endfor %}
-  {% endif %}
-</h3>
+{% if post.tags.size > 0 %}
+  {% for tag in post.tags %}
+    <a href="{{ "/tags/" | append: tag | relative_url }}" class="post-tag">{{ tag }}</a>
+  {% endfor %}
+{% endif %}
 {% endraw %}
 {% endhighlight %}
 
@@ -276,6 +297,7 @@ tag!
 
 ## Conclusion
 
-This was a fun, though surprisingly challenging, process but I learned a lot
-and hopefully this post will be helpful to others. Feel free to checkout the
-website source code and/or open an issue with questions or feedback.
+This simple feature turned out to be surprisingly challenging, which means it
+was a lot of fun. Hopefully this post will be helpful to others, as well! Feel
+free to checkout the website [source code](github.com/srang/samuelrang.com)
+and/or open an issue with questions or feedback.

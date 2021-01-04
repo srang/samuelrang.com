@@ -1,17 +1,13 @@
-{%- if posts -%}
+{%- if include.posts -%}
 <ul class="post-list">
-  {% for post in posts %}
+  {% for post in include.posts %}
     <li>
       {%- assign date_format = site.minima.date_format | default: "%b %-d, %Y" -%}
         <h3>
           <a class="post-link" href="{{ post.url | relative_url }}">
             {{ post.title | escape }}
           </a>
-          {% if post.tags.size > 0 %}
-            {% for tag in post.tags %}
-              <a href="{{ "/tags/" | append: tag | relative_url }}" class="post-tag">{{ tag }}</a>
-            {% endfor %}
-          {% endif %}
+          {% include tag_list.html post=post %}
         </h3>
         <span class="post-meta">{{ post.date | date: date_format }}</span>
         {%- if site.data.config.show_excerpts -%}
@@ -21,5 +17,5 @@
   {% endfor %}
 </ul>
 {%- else -%}
-<h2>No posts found :(</h2>
+<h2>No posts found :sob:</h2>
 {%- endif -%}

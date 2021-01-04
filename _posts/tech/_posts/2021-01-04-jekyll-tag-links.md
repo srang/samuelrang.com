@@ -28,16 +28,16 @@ thing I wanted to do was figure out how to organize the blog splitting it into
 football stuff and tech stuff. For that, I started with [Jekyll
 categories](https://jekyllrb.com/docs/posts/#categories). I also wanted to show
 separate pages for each category. To accomplish this, I created a custom
-[`_include`](https://jekyllrb.com/docs/includes/) for post listings that assume
+[`_include`](https://jekyllrb.com/docs/includes/) for post listings that expects
 a `posts` variable is populated with - you guessed it - POSTS! This template
 ensures a consistent look-and-feel anywhere I wanted to list posts.
 
 `_includes/post_item.html`
 {% highlight html linenos %}
 {% raw %}
-{%- if posts -%}
+{%- if include.posts -%}
 <ul class="post-list">
-  {% for post in posts %}
+  {% for post in include.posts %}
     <li>
       {%- assign date_format = site.minima.date_format | default: "%b %-d, %Y" -%}
         <h3>
@@ -53,7 +53,7 @@ ensures a consistent look-and-feel anywhere I wanted to list posts.
   {% endfor %}
 </ul>
 {%- else -%}
-<h2>No posts found :(</h2>
+<h2>No posts found :sob:</h2>
 {%- endif -%}
 {% endraw %}
 {% endhighlight %}
@@ -63,10 +63,8 @@ Using the template simplified my category landing pages to look like this:
 `football.html`
 {% highlight html linenos %}
 {% raw %}
-{% assign posts = site.categories.football %}
-
 <h1 class="post-list-heading">NFL Posts</h1>
-{% include post_item.html %}
+{% include post_item.html posts=site.categories.football %}
 {% endraw %}
 {% endhighlight %}
 
@@ -79,13 +77,15 @@ simple, just trying to show the tags on the page. I will admit I fell into a
 deep dark hole around theming, and custom CSS/SASS, but I'll leave that for a
 different post. Showing the tag looked like this:
 
-`_includes/post_item.html`
+`_includes/tag_list.html`
 {% highlight html linenos %}
 {% raw %}
-{% if post.tags.size > 0 %}
-  {% for tag in post.tags %}
-    <span class="post-tag">{{ tag }}</span>
-  {% endfor %}
+{% if include.post.tags.size > 0 %}
+  <div class="tag-list">
+      {% for tag in include.post.tags %}
+        <span class="post-tag">{{ tag }}</span>
+      {% endfor %}
+  </div>
 {% endif %}
 {% endraw %}
 {% endhighlight %}
@@ -251,12 +251,10 @@ as:
 ---
 layout: default
 ---
-{% assign posts = page.tag_posts %}
-
 <h1 class="post-list-heading">
   <code>{{ page.tag_name }}</code> Posts
 </h1>
-{% include post_item.html %}
+{% include post_item.html posts=page.tag_posts %}
 {% endraw %}
 {% endhighlight %}
 
@@ -281,13 +279,15 @@ at build time using the new layout for every tag in the site. The only problem i
 no way to get to the pages!_ Easy enough to fix. I tweaked the `post_item` code that we've
 been so wonderfully reusing to change the tags to links:
 
-`_includes/post_item.html`
+`_includes/tag_list.html`
 {% highlight html linenos %}
 {% raw %}
-{% if post.tags.size > 0 %}
-  {% for tag in post.tags %}
-    <a href="{{ "/tags/" | append: tag | relative_url }}" class="post-tag">{{ tag }}</a>
-  {% endfor %}
+{% if include.post.tags.size > 0 %}
+  <div class="tag-list">
+    {% for tag in include.post.tags %}
+      <a href="{{ "/tags/" | append: tag | relative_url }}" class="post-tag">{{ tag }}</a>
+    {% endfor %}
+  </div>
 {% endif %}
 {% endraw %}
 {% endhighlight %}

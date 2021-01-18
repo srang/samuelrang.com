@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# site-manager
+# Used for various activities for managing the blog
+###############################################################################
+# exit on command errors (so you MUST handle exit codes properly!)
+set -e
+# pass trap handlers down to subshells
+set -E
+# capture fail exit codes in piped commands
+set -o pipefail
+# execution tracing debug messages (for debugging option/input logic)
+# set -x
+
+# Program configuration and helpers
+###############################################################################
+
+# Error handler
+on_err() {
+	echo ">> ERROR: $?"
+	FN=0
+	for LN in "${BASH_LINENO[@]}"; do
+		[ "${FUNCNAME[$FN]}" = "main" ] && break
+		echo ">> ${BASH_SOURCE[$FN]} $LN ${FUNCNAME[$FN]}"
+		FN=$(( FN + 1 ))
+	done
+}
+trap on_err ERR
+
+# Exit handler
+declare -a EXIT_CMDS
+add_exit_cmd() { EXIT_CMDS+="$*;  "; }
+on_exit(){ eval "${EXIT_CMDS[@]}"; }
+trap on_exit EXIT
+
+# absolute path to command (used for show_help)
+CMD="$(readlink -f $0)"
+
+# Defaults and command line options
+[ "$VERBOSE" ] ||  VERBOSE=
+[ "$QUIET" ]   ||  QUIET=
+[ "$DEBUG" ]   ||  DEBUG=
+[ "$BUILD" ]   ||  BUILD=0
+[ "$SERVE" ]   ||  SERVE=0
+[ "$DATEFORM" ]||  DATEFORM="%F %T(%Z)"
+[ "$OUTPUT" ]  ||  OUTPUT="/tmp/sm.log" # useful for catching errors
+
+# Logging helpers
+out() { echo "$(date +"$DATEFORM"): $*" | tee $OUTPUT; }
+err() { out "$*" 1>&2; }
+vrb() { [ ! "$VERBOSE" ] || out "$@"; }
+dbg() { [ ! "$DEBUG" ] || err "$@"; }
+die() { err "EXIT: $1" && [ "$2" ] && [ "$2" -ge 0 ] && exit "$2" || exit 1; }
+
+# Show help function to be used below
+show_help() {
+	awk 'NR>1{print} /^(###|$)/{exit}' "$CMD"
+	echo "USAGE: $(basename "$CMD") [options] [command]"
+	echo "OPTS:"
+	MSG=$( sed -n '/^for arg in/,/-?/p' "$CMD" | head -n -1 | sed -e 's/^[[:space:]]*/  /' -e 's/|/, /' -e 's/)//' | grep '^  -')
+	EMSG=$(eval "echo \"$MSG\"")
+	echo "$EMSG"
+	echo "CMDS:"
+	MSG=$( sed -n '/^for arg in/,/-?/p' "$CMD" | head -n -1 | sed -e 's/^[[:space:]]*/  /' -e 's/|/, /' | grep '^  [a-z]\+) ' | sed -e 's/)//' )
+	EMSG=$(eval "echo \"$MSG\"")
+	echo "$EMSG"
+}
+
+# Options and arguments
+###############################################################################
+for arg in "$@"; do case "$arg" in
+	-h|--help)           # Show this help message
+		show_help; exit 0; ;;
+	-x|--debug)          # Enable debugging messages (implies verbose)
+		DEBUG=$(( DEBUG + 1 )) && VERBOSE="$DEBUG" && DATEFORM='%a %b %d, %r (%Z %:::z)' && out "#-INFO: DEBUG=ON (implies VERBOSE=ON)"; ;;
+	-v|--verbose)        # Enable verbose messages
+		VERBOSE=$(( VERBOSE + 1 )) && DATEFORM='%a %b %d, %r (%Z %:::z)' && out "#-INFO: VERBOSE=ON"; ;;
+	-q|--quiet)          # limit output to major steps and errors
+		QUIET=$(( QUIET + 1 )) && exec >$OUTPUT && OUTPUT=$(tty) && out "#-INFO: QUIET=ON"; ;;
+	build)                # clean and build site
+		BUILD=$(( BUILD + 1 )) && vrb "# INFO: BUILD=ON"; ;;
+	serve)                # build and serve site locally
+		SERVE=$(( SERVE + 1 )) && vrb "# INFO: SERVE=ON"; BUILD=$(( BUILD + 1 )) && vrb "# INFO: BUILD=ON"; ;;
+	-?)                   # handle invalid options
+		die "# ERROR: Invalid option supplied: '$arg'. Execute '$(basename $CMD)' -h for usage information"; ;;
+	help)                # build and serve site locally
+		show_help; exit 0; ;;
+	*)                   # handle invalid commands
+		die "# ERROR: Invalid command supplied: '$arg'. Execute '$(basename $CMD)' -h for usage information"; ;;
+esac; done
+
+# Program execution
+###############################################################################
+
+# don't start debugging until after inputs are parsed
+[ "$DEBUG" ]  &&  set -x
+
+if [ $BUILD -gt 0 ]; then
+	out "#-INFO: Initiating build"
+	vrb "#-INFO: Cleaning"
+	bundle exec jekyll clean
+	vrb "#-INFO: Updating bundles"
+	bundle update
+	vrb "#-INFO: Executing build"
+	bundle exec jekyll build
+fi
+
+if [ $SERVE -gt 0 ]; then
+	out "#-INFO: Serving"
+	bundle exec jekyll serve --drafts
+fi
+

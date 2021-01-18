@@ -41,6 +41,7 @@ CMD="$(readlink -f $0)"
 [ "$DEBUG" ]   ||  DEBUG=
 [ "$BUILD" ]   ||  BUILD=0
 [ "$SERVE" ]   ||  SERVE=0
+[ "$SHTDN" ]   ||  SHTDN=0
 [ "$DATEFORM" ]||  DATEFORM="%F %T(%Z)"
 [ "$OUTPUT" ]  ||  OUTPUT="/tmp/sm.log" # useful for catching errors
 
@@ -60,7 +61,7 @@ show_help() {
 	EMSG=$(eval "echo \"$MSG\"")
 	echo "$EMSG"
 	echo "CMDS:"
-	MSG=$( sed -n '/^for arg in/,/-?/p' "$CMD" | head -n -1 | sed -e 's/^[[:space:]]*/  /' -e 's/|/, /' | grep '^  [a-z]\+) ' | sed -e 's/)//' )
+	MSG=$( sed -n '/^for arg in/,/-?/p' "$CMD" | head -n -1 | sed -e 's/^[[:space:]]*/  /' | grep '^  [a-z|]\+) ' | sed -e 's/|/, /'  -e 's/)//' )
 	EMSG=$(eval "echo \"$MSG\"")
 	echo "$EMSG"
 }
@@ -71,15 +72,17 @@ for arg in "$@"; do case "$arg" in
 	-h|--help)           # Show this help message
 		show_help; exit 0; ;;
 	-x|--debug)          # Enable debugging messages (implies verbose)
-		DEBUG=$(( DEBUG + 1 )) && VERBOSE="$DEBUG" && DATEFORM='%a %b %d, %r (%Z %:::z)' && out "#-INFO: DEBUG=ON (implies VERBOSE=ON)"; ;;
+		DEBUG=$(( DEBUG + 1 )) && VERBOSE="$DEBUG" && DATEFORM='%a %b %d, %r (%Z %:::z)' && out "# INFO: Running in Debug mode"; ;;
 	-v|--verbose)        # Enable verbose messages
-		VERBOSE=$(( VERBOSE + 1 )) && DATEFORM='%a %b %d, %r (%Z %:::z)' && out "#-INFO: VERBOSE=ON"; ;;
+		VERBOSE=$(( VERBOSE + 1 )) && DATEFORM='%a %b %d, %r (%Z %:::z)' && out "# INFO: Running in Verbose mode"; ;;
 	-q|--quiet)          # limit output to major steps and errors
-		QUIET=$(( QUIET + 1 )) && exec >$OUTPUT && OUTPUT=$(tty) && out "#-INFO: QUIET=ON"; ;;
-	build)                # clean and build site
-		BUILD=$(( BUILD + 1 )) && vrb "# INFO: BUILD=ON"; ;;
-	serve)                # build and serve site locally
-		SERVE=$(( SERVE + 1 )) && vrb "# INFO: SERVE=ON"; BUILD=$(( BUILD + 1 )) && vrb "# INFO: BUILD=ON"; ;;
+		QUIET=$(( QUIET + 1 )) && exec >$OUTPUT && OUTPUT=$(tty) && out "# INFO: Running in Quiet mode"; ;;
+	b|build)             # clean and build site
+		BUILD=$(( BUILD + 1 )) && vrb "# INFO: Build will be executed"; ;;
+	s|serve)             # build and serve site locally
+		SERVE=$(( SERVE + 1 )) && vrb "# INFO: Server will be started"; ;;
+	k|shutdown)          # kill local jekyll if running
+		SHTDN=$(( SHTDN + 1 )) && vrb "# INFO: Server will be shutdown"; ;;
 	-?)                   # handle invalid options
 		die "# ERROR: Invalid option supplied: '$arg'. Execute '$(basename $CMD)' -h for usage information"; ;;
 	help)                # build and serve site locally
@@ -95,17 +98,26 @@ esac; done
 [ "$DEBUG" ]  &&  set -x
 
 if [ $BUILD -gt 0 ]; then
-	out "#-INFO: Initiating build"
-	vrb "#-INFO: Cleaning"
+	out "# INFO: Initiating build"
+	vrb "# INFO: Cleaning"
 	bundle exec jekyll clean
-	vrb "#-INFO: Updating bundles"
+	vrb "# INFO: Updating bundles"
 	bundle update
-	vrb "#-INFO: Executing build"
+	vrb "# INFO: Executing build"
 	bundle exec jekyll build
 fi
 
 if [ $SERVE -gt 0 ]; then
-	out "#-INFO: Serving"
-	bundle exec jekyll serve --drafts
+	out "# INFO: Serving"
+	bundle exec jekyll serve --drafts &
+fi
+
+if [ $SHTDN -gt 0 ]; then
+	out "# INFO: Killing server"
+	SVR_PID=$(pgrep -a ruby | grep jekyll | awk '{ print $1 }') || err '# WARN: Server PID not found. Likely server is not running'
+	if [ $SVR_PID ]; then
+		vrb "# INFO: found Server PID '$SVR_PID', attempting to shutdown"
+		kill -15 $SVR_PID
+	fi
 fi
 

@@ -59,18 +59,19 @@ show_help() {
     awk 'NR>1{print} /^(###|$)/{exit}' "$CMD"
     echo "USAGE: $(basename "$CMD") [options] [command]"
     echo "OPTS:"
-    MSG=$( sed -n '/^for arg in/,/-?/p' "$CMD" | head -n -1 | sed -e 's/^[[:space:]]*/  /' -e 's/|/, /' -e 's/)//' | grep '^  -')
+    MSG=$( sed -n '/^## Options/,/-?/p' "$CMD" | head -n -1 | sed -e 's/^[[:space:]]*/  /' -e 's/|/, /' -e 's/)//' | grep '^  -')
     EMSG=$(eval "echo \"$MSG\"")
     echo "$EMSG"
     echo "CMDS:"
-    MSG=$( sed -n '/^for arg in/,/-?/p' "$CMD" | head -n -1 | sed -e 's/^[[:space:]]*/  /' | grep '^  [a-z|]\+) ' | sed -e 's/|/, /'  -e 's/)//' )
+    MSG=$( sed -n '/^## Options/,/-?/p' "$CMD" | head -n -1 | sed -e 's/^[[:space:]]*/  /' | grep '^  [a-z|]\+) ' | sed -e 's/|/, /'  -e 's/)//' )
     EMSG=$(eval "echo \"$MSG\"")
     echo "$EMSG"
 }
 
-# Options and arguments
-###############################################################################
-for arg in "$@"; do case "$arg" in
+## Options and arguments
+while [[ $# -gt 0 ]]; do
+    opt="$1"; shift; #expose next argument
+    case "$opt" in
     -h|--help)           # Show this help message
         show_help; exit 0; ;;
     -x|--debug)          # Enable debugging messages (implies verbose)
@@ -87,14 +88,15 @@ for arg in "$@"; do case "$arg" in
         SHTDN=$(( SHTDN + 1 )) && vrb "# INFO: Server will be shutdown"; ;;
     p|publish)           # publish blog to github
         PUBLISH=$(( PUBLISH + 1 )) && vrb "# INFO: Site will be published"; ;;
-    ng|gotw)             # create a new Game of the Week draft post
-        GOTW=$(( GOTW + 1 )) && vrb "# INFO: GOTW Draft will be created"; ;;
+    ng|gotw)             # create a new Game of the Week draft post, arg1: Week #, arg2: yyyy-mm-dd, arg3: team1, arg4: team2
+        GOTW=$(( GOTW + 1 )) && GOTW_WEEK=$1 && GOTW_DATE=$2 && GOTW_TEAM1=$3 && GOTW_TEAM2=$4 \
+                             && shift 4 && vrb "# INFO: GOTW Draft will be created"; ;;
     -?)                   # handle invalid options
-        die "# ERROR: Invalid option supplied: '$arg'. Execute '$(basename $CMD)' -h for usage information"; ;;
+        die "# ERROR: Invalid option supplied: '$opt'. Execute '$(basename $CMD)' -h for usage information"; ;;
     help)                # build and serve site locally
         show_help; exit 0; ;;
     *)                   # handle invalid commands
-        die "# ERROR: Invalid command supplied: '$arg'. Execute '$(basename $CMD)' -h for usage information"; ;;
+        die "# ERROR: Invalid command supplied: '$opt'. Execute '$(basename $CMD)' -h for usage information"; ;;
 esac; done
 
 # Program execution
@@ -176,20 +178,17 @@ if [ $PUBLISH -gt 0 ]; then
         vrb "# INFO: Returning to the master branch"
         git checkout $MASTER_BRANCH
     else
-        err "Not $MASTER_BRANCH branch. Skipping build"
+        err "# ERROR: Not $MASTER_BRANCH branch. Skipping build"
     fi
 fi
 
-
-
 if [ $GOTW -gt 0 ]; then
-    GOTW_WEEK="1"
-    GOTW_TEAMS="Bengals - Ravens"
-    #echo "GOTW Week:"
-    #read GOTW_WEEK
-    #echo "Teams: <team1> - <team2>"
-    #read GOTW_TEAMS
-    #out "#INFO: GAME OF THE WEEK, Week $GOTW_WEEK: $GOTW_TEAMS"
-    #echo "GOTW-$GOTW_WEEK-$(echo $GOTW_TEAMS | sed 's/ //g')"
-    ansible localhost -m file -a "path=$(pwd)/_drafts/$GOTW_WEEK-$(echo $GOTW_TEAMS | sed 's/ //g').md state=touch"
+    [ $GOTW_WEEK -gt 0 ] || die "# ERROR: GOTW Week \"$GOTW_WEEK\" invalid"
+    [[ $GOTW_DATE =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || die "# ERROR: GOTW Date \"$GOTW_DATE\" invalid"
+    [[ ! -z $GOTW_TEAM1 ]] || die "# ERROR: GOTW Team1 \"$GOTW_TEAM1\" invalid"
+    [[ ! -z $GOTW_TEAM2 ]] || die "# ERROR: GOTW Team2 \"$GOTW_TEAM2\" invalid"
+    vrb "# INFO: GAME OF THE WEEK draft being created: Week $GOTW_WEEK, Date $GOTW_DATE, TEAM1 $GOTW_TEAM1, TEAM2 $GOTW_TEAM2"
+    ansible localhost -m template \
+      -a "src=$(pwd)/_templates/GOTW.j2 dest=$(pwd)/_drafts/$GOTW_DATE-GOTW-$GOTW_WEEK-$GOTW_TEAM1-$GOTW_TEAM2.md" \
+      -e "GOTW_WEEK=$GOTW_WEEK GOTW_DATE=$GOTW_DATE GOTW_TEAM1=$GOTW_TEAM1 GOTW_TEAM2=$GOTW_TEAM2"
 fi

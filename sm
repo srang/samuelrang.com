@@ -43,6 +43,7 @@ CMD="$(readlink -f $0)"
 [ "$SERVE" ]   ||  SERVE=0
 [ "$SHTDN" ]   ||  SHTDN=0
 [ "$PUBLISH" ] ||  PUBLISH=0
+[ "$GOTW" ]    ||  GOTW=0
 [ "$DATEFORM" ]||  DATEFORM="%F %T(%Z)"
 [ "$OUTPUT" ]  ||  OUTPUT="/tmp/sm.log" # useful for catching errors
 
@@ -84,8 +85,10 @@ for arg in "$@"; do case "$arg" in
         SERVE=$(( SERVE + 1 )) && vrb "# INFO: Server will be started"; ;;
     k|shutdown)          # kill local jekyll if running
         SHTDN=$(( SHTDN + 1 )) && vrb "# INFO: Server will be shutdown"; ;;
-    p|publish)           # kill local jekyll if running
-        PUBLISH=$(( PUBLISH + 1 )) && vrb "# INFO: Server will be shutdown"; ;;
+    p|publish)           # publish blog to github
+        PUBLISH=$(( PUBLISH + 1 )) && vrb "# INFO: Site will be published"; ;;
+    ng|gotw)             # create a new Game of the Week draft post
+        GOTW=$(( GOTW + 1 )) && vrb "# INFO: GOTW Draft will be created"; ;;
     -?)                   # handle invalid options
         die "# ERROR: Invalid option supplied: '$arg'. Execute '$(basename $CMD)' -h for usage information"; ;;
     help)                # build and serve site locally
@@ -107,6 +110,14 @@ build() {
     bundle exec jekyll build
 }
 
+shutdown() {
+    SVR_PID=$(pgrep -a ruby | grep jekyll | awk '{ print $1 }') || err '# WARN: Server PID not found. Likely server is not running'
+    if [ $SVR_PID ]; then
+        vrb "# INFO: found Server PID '$SVR_PID', attempting to shutdown"
+        kill -15 $SVR_PID
+    fi
+}
+
 # don't start debugging until after inputs are parsed
 [ "$DEBUG" ]  &&  set -x
 
@@ -124,11 +135,7 @@ fi
 # Shutdown development server
 if [ $SHTDN -gt 0 ]; then
     out "# INFO: Killing server"
-    SVR_PID=$(pgrep -a ruby | grep jekyll | awk '{ print $1 }') || err '# WARN: Server PID not found. Likely server is not running'
-    if [ $SVR_PID ]; then
-        vrb "# INFO: found Server PID '$SVR_PID', attempting to shutdown"
-        kill -15 $SVR_PID
-    fi
+    shutdown
 fi
 
 # Publish if master branch
@@ -171,5 +178,18 @@ if [ $PUBLISH -gt 0 ]; then
     else
         err "Not $MASTER_BRANCH branch. Skipping build"
     fi
+fi
 
+
+
+if [ $GOTW -gt 0 ]; then
+    GOTW_WEEK="1"
+    GOTW_TEAMS="Bengals - Ravens"
+    #echo "GOTW Week:"
+    #read GOTW_WEEK
+    #echo "Teams: <team1> - <team2>"
+    #read GOTW_TEAMS
+    #out "#INFO: GAME OF THE WEEK, Week $GOTW_WEEK: $GOTW_TEAMS"
+    #echo "GOTW-$GOTW_WEEK-$(echo $GOTW_TEAMS | sed 's/ //g')"
+    ansible localhost -m file -a "path=$(pwd)/_drafts/$GOTW_WEEK-$(echo $GOTW_TEAMS | sed 's/ //g').md state=touch"
 fi

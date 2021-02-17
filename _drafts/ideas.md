@@ -1,0 +1,4 @@
+- cowthoughts
+- best football podcasts
+- 2020 in review
+- dotfile management

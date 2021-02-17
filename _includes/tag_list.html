@@ -1,0 +1,7 @@
+{% if include.post.tags.size > 0 %}
+  <div class="tag-list">
+      {% for tag in include.post.tags %}
+        <a href="{{ "/tags/" | append: tag | relative_url }}" class="post-tag">{{ tag }}</a>
+      {% endfor %}
+  </div>
+{% endif %}

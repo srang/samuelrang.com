@@ -21,6 +21,9 @@ set -o pipefail
 # Program configuration and helpers
 ###############################################################################
 
+# Check Arch
+CMD_ARCH=$(uname -s)
+
 # Error handler
 on_err() {
     echo ">> ERROR: $?"
@@ -40,8 +43,11 @@ on_exit(){ eval "${EXIT_CMDS[@]}"; }
 trap on_exit EXIT
 
 # absolute path to command (used for show_help)
-#CMD="$(readlink -f $0)"
-CMD=$0
+if [[ $CMD_ARCH == 'Darwin' ]]; then
+  CMD=$0
+else
+  CMD="$(readlink -f $0)"
+fi
 
 # Defaults and command line options
 [ "$VERBOSE" ] ||  VERBOSE=
@@ -67,11 +73,19 @@ show_help() {
     awk 'NR>1{print} /^(###|$)/{exit}' "$CMD"
     echo "USAGE: $(basename "$CMD") [options] [command]"
     echo "OPTS:"
-    MSG=$( sed -n '/^## Options/,/-?/p' "$CMD" | head -n -1 | sed -e 's/^[[:space:]]*/  /' -e 's/|/, /' -e 's/)//' | grep '^  -')
+    if [[ $CMD_ARCH == 'Darwin' ]]; then
+      MSG=$(sed -n '/^## Options/,/-?/p' "$CMD" | sed -e '1d' | sed -e 's/^[[:space:]]*/  /' -e 's/|/, /' -e 's/)//' | grep '^  -')
+    else
+      MSG=$(sed -n '/^## Options/,/-?/p' "$CMD" | head -n -1 | sed -e 's/^[[:space:]]*/  /' -e 's/|/, /' -e 's/)//' | grep '^  -')
+    fi
     EMSG=$(eval "echo \"$MSG\"")
     echo "$EMSG"
     echo "CMDS:"
-    MSG=$( sed -n '/^## Options/,/-?/p' "$CMD" | head -n -1 | sed -e 's/^[[:space:]]*/  /' | grep '^  [a-z|]\+) ' | sed -e 's/|/, /'  -e 's/)//' )
+    if [[ $CMD_ARCH == 'Darwin' ]]; then
+      MSG=$(sed -n '/^## Options/,/-?/p' "$CMD" | sed -e '1d' | sed -e 's/^[[:space:]]*/  /' | grep '^  [a-z|]\+) ' | sed -e 's/|/, /'  -e 's/)//' )
+    else
+      MSG=$(sed -n '/^## Options/,/-?/p' "$CMD" | head -n -1 | sed -e 's/^[[:space:]]*/  /' | grep '^  [a-z|]\+) ' | sed -e 's/|/, /'  -e 's/)//' )
+    fi
     EMSG=$(eval "echo \"$MSG\"")
     echo "$EMSG"
 }

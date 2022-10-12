@@ -139,9 +139,9 @@ build() {
 }
 
 shutdown() {
-    SVR_PID=$(pgrep -a ruby | grep jekyll | awk '{ print $1 }') || err '# WARN: Server PID not found. Likely server is not running'
-    if [ $SVR_PID ]; then
-        vrb "# INFO: found Server PID '$SVR_PID', attempting to shutdown"
+    SVR_PID=$(ps | grep jekyll | head -n 1 | awk '{ print $1 }') || err '# WARN: Server PID not found. Likely server is not running'
+    vrb "# INFO: found Server PID '$SVR_PID', attempting to shutdown"
+    if [ $SVR_PID -gt 0 ]; then
         kill -15 $SVR_PID
     fi
 }

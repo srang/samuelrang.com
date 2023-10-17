@@ -1,46 +1,33 @@
 ---
 layout: post
-title: "Week 3 - Week in Review"
+title: "Week 5 - Week in Review"
 author: srang
-date:   2020-10-01
+date:   2023-10-10
 categories: football
 tags:
   - football
   - week in review
 ---
 
-Another week is in the books! We’ve had some surprise contenders emerge and
-some off-season hopefuls turn into disappointments, it almost feels like a
-normal football season!
+We're running it back. It's long overdue so without further ado, here is the NEWSLETTER!
+There were some great matchups this week starting off with Thursday's game that 
+included a 49.0 (!!!!) point showing by DJ Moore, which nearly doubled his total
+points for the rest of the season combined!! 
 
-It might not have been as good as the Battle of Ohio, but The Beard vs. The
-Stache (and/or battle for East Coast of Florida...) was still fun. Minshew has
-emerged this season as a surprisingly viable starting quarterback, and in this
-Week 3 matchup, he out-distanced Fitz 246 to 156 in air yards but went
-0-3 on fourth down conversions. Meanwhile, the Old Man and the Sea brought his
-Fitz-<i>magic</i> to bear early with three touchdowns on their first three drives.
-Miami wins 31-13.
+On a fun note, Kelly asked during the Sunday morning game who we were cheering for, so 
+I thought I'd throw together a "Watchability Ranking" of Non-Bengal teams we (I) want
+to see win.
 
-The Bengals managed to find something more dissatisfying than a loss, tying the
-Eagles 23-23. These are the same Eagles whose stadium-sound-team piped in
-booing last week.
+https://xkcd.com/2270/
 
-The Bears are the latest team to emerge like a phoenix from yet another Falcons
-fourth quarter flame out. The Falcons gave up a 16 point lead in the fourth
-quarter after the Bears benched Trubisky for Foles, and somehow the Bears are
-3-0 on the season.
-
-Gostkowski has redeemed himself from his 1-4 kicking performance in Week 1,
-going 6 for 6 this week with kicks from 30, 31, 39, 51, 54, and 55 (!). Titans
-seem to be having a surprising amount of success running things back from last
-year, moving to 3-0 on the season, while Minnesota has lots of questions to
-answer, sitting at 0-3.
-
-Both New York teams STINK. That is all.
-
-Seahawks and Packers are both rolling through their opponents this season, led
-by their quarterbacks.
-
-MNF was a matchup that came too early in the season but wasn’t as close as we
-all hoped. Mahomes cooked, Ravens couldn’t keep up.
-
+7. Jets - Zach Wilson is a much less compelling watch than Aaron Rodgers, especially
+after the Hard Knocks glow-up but their Defense has a cast of characters that make 
+this team worth cheering for.
+6. Dolphins - Putting 70 on Sean Payton catapulted this team into the list. Plus
+I'm partial
+5. Vikings
+4. Jaguars
+3. Niners
+2. Eagles
+1. Lions - Dan Campbell is must watch TV and on both sides of the ball they have a
+punishing line. Plus, again, they were on Hard Knocks....
